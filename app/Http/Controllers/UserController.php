@@ -16,7 +16,7 @@ $this->request = $request;
         //
         return User::where('id','like','%'.$id.'%')->get();
     }
-    public function a(Request $request ){
+    public function add(Request $request ){
         $rules = [
             'id' => 'max:20',
             'firstname' => 'max:20',
@@ -27,7 +27,7 @@ $this->request = $request;
         return $user;
        
 }
-    public function u(Request $request,$id)
+    public function update(Request $request,$id)
     {
     $rules = [
     'id' => 'max:20',
@@ -46,7 +46,7 @@ $this->request = $request;
     $user->save();
     return $user;
 }
-    public function d($id)
+    public function delete($id)
     {
     $user = User::findOrFail($id);
     $user->delete();
