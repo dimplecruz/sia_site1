@@ -1,72 +1,90 @@
 <?php
+
+//  <-- CONTROLLER - THE MIDDLE MAN
+
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
-use App\Models\User;
-Class UserController extends Controller {
-private $request;
-public function __construct(Request $request){
-$this->request = $request;
-}
-    public function getAllUser(){
+use Illuminate\Http\Response;
+use Illuminate\Http\Request; // <-- handling http request in lumen
+use App\Models\User; // <-- The model
+use App\Traits\ApiResponser; // <-- use to standardized our code for api response
+
+// use DB;  // <---if you're not using lumen eloquent you can use DB component in lumen
+
+class UserController extends Controller
+{
+    use ApiResponser;
+    private $request;
+
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+    }
+// GET
+
+    public function all()
+    {
+        // eloquent style
         $users = User::all();
-        return response()->json($users, 200);
+
+        // sql string as parameter (if nag use og DB)
+        // $user = DB::connection('mysql')
+        // ->select("Select * from tbluser");
+        // return response()->json($users, 200); // <-- before
+        return $this->successResponse($users);
     }
-    public function show($id)
-    {
-        //
-        return User::where('id','like','%'.$id.'%')->get();
-    }
-    public function add(Request $request ){
-        $rules = [
-            'id' => 'max:20',
-            'firstname' => 'max:20',
-            'lastname' => 'max:20',
-        ];
-        $this->validate($request,$rules);
-        $user = User::create($request->all());
-        return $user;
-       
+
+// GET (ID)
+public function show($id)
+{ 
+    $user = User::findOrFail($id);
+    return $this->successResponse($user);
+
 }
-    public function update(Request $request,$id)
-    {
+
+// ADD
+public function add(Request $request)
+{
+    
     $rules = [
-    'id' => 'max:20',
-    'firstname' => 'max:20',
-    'lastname' => 'max:20',
+        'firstname' => 'required|max:20',
+        'lastname' => 'required|max:20',
+    ];
+    $this->validate($request, $rules);
+    $user = User::create($request->all());
+
+    return $this->successResponse($user, Response::HTTP_CREATED);
+}
+
+// UPDATE
+public function up(Request $request, $id)
+{
+    $rules = [
+        'firstname' => 'required|max:20',
+        'lastname' => 'required|max:20',
     ];
     $this->validate($request, $rules);
     $user = User::findOrFail($id);
     $user->fill($request->all());
 
-    // if no changes happen
-    if ($user->isClean()) {
-    return $this->errorResponse('At least one value must
-    change', Response::HTTP_UNPROCESSABLE_ENTITY);
-    }
     $user->save();
+
     return $user;
 }
-    public function delete($id)
-    {
+
+// DELETE
+
+public function del($id)
+{
     $user = User::findOrFail($id);
     $user->delete();
-
- 
-    // old code
-    /*
-    $user = User::where('userid', $id)->first();
-    if($user){
-    $user->delete();
-    return $this->successResponse($user);
-    }
-    {
-    return $this->errorResponse('User ID Does Not Exists',
-    Response::HTTP_NOT_FOUND);
-    }
-    */
-    }
 }
 
-//website
-//https://dev.to/tanzimibthesam/making-api-crud-create-read-update-delete-with-laravel-8-n-api-authentication-with-sanctum-19oh
- 
+    // Index
+
+public function index()
+    {
+        $users = User::all();
+
+        return $this->successResponse($users);
+    }
+}
